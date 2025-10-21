@@ -78,13 +78,4 @@ def send_email():
     except Exception as e:
         print("Error sending email:", e)
 
-
-
-# Called job at 08:00 a.m every day
-schedule.every().day.at("08:00").do(send_email)
-# schedule.every(0).seconds.do(send_email)
-# send_email()
-# Loop for running schedule
-# while True:
-#     schedule.run_pending()
-#     time.sleep(1)
+send_email()
