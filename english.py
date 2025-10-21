@@ -74,16 +74,16 @@ def send_email():
             server.starttls()
             server.login(SENDER_EMAIL, SENDER_PASSWORD)
             server.send_message(msg)
-        print("✅ Email sent successfully!")
+        print("Email sent successfully!")
     except Exception as e:
-        print("❌ Error sending email:", e)
+        print("Error sending email:", e)
 
 
 
 # Called job at 08:00 a.m every day
-# schedule.every().day.at("08:00").do(send_email)
+schedule.every().day.at("08:00").do(send_email)
 # schedule.every(0).seconds.do(send_email)
-send_email()
+# send_email()
 # Loop for running schedule
 # while True:
 #     schedule.run_pending()
