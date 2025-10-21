@@ -3,6 +3,7 @@ from google import genai
 from dotenv import load_dotenv
 import schedule
 import time
+from string import Template
 from datetime import datetime
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -38,38 +39,52 @@ def AI_Node_generating_word(band_toeic_min, band_toeic_max):
         model="gemini-2.5-flash",
         contents=f"Generate 10 TOEIC words for learners in band {band_toeic_min}-{band_toeic_max}"
                     f" Just the words and their meaning in Vietnamese"
-                        f" And please show the topic of these words in the first line"
+                        f" And please show the topic in english of these words in the first line"
     )
     return response_words
 
+def render_template(template_path, data):
+    """Đọc và thay thế dữ liệu trong file HTML template"""
+    with open(template_path, "r", encoding="utf-8") as file:
+        src = Template(file.read())
+        return src.safe_substitute(data)
+
 def send_email():
     subject = f"Daily English Vocabulary - {formatted_date}"
-    
+
+    # Generate the vocabulary and paragraph text
     words_text, paragraph_text = AI_Node_generating_paragraph(700, 800)
 
-    body = f"Here are your 10 TOEIC words for today ({formatted_date}):\n\n{words_text}\n\n---\n\n{paragraph_text}"
+    # Render HTML từ template
+    html_body = render_template("email_template.html", {
+        "date": formatted_date,
+        "words": words_text.replace("\n", "<br>"),
+        "paragraph": paragraph_text.replace("\n", "<br>")
+    })
 
-    msg = MIMEMultipart()
+    # Tạo email
+    msg = MIMEMultipart("alternative")
     msg["From"] = SENDER_EMAIL
     msg["To"] = RECEIVER_EMAIL
     msg["Subject"] = subject
-    msg.attach(MIMEText(body, "plain"))
+    msg.attach(MIMEText(html_body, "html"))
 
     try:
         with smtplib.SMTP("smtp.gmail.com", 587) as server:
             server.starttls()
             server.login(SENDER_EMAIL, SENDER_PASSWORD)
             server.send_message(msg)
-        print(f"Email sent successfully!")
+        print("✅ Email sent successfully!")
     except Exception as e:
-        print(f"Error sending email:", e)
+        print("❌ Error sending email:", e)
+
 
 
 # Called job at 08:00 a.m every day
-schedule.every().day.at("08:00").do(send_email)
-# schedule.every(10).seconds.do(send_email)
-
+# schedule.every().day.at("08:00").do(send_email)
+# schedule.every(0).seconds.do(send_email)
+send_email()
 # Loop for running schedule
-while True:
-    schedule.run_pending()
-    time.sleep(1)
+# while True:
+#     schedule.run_pending()
+#     time.sleep(1)
